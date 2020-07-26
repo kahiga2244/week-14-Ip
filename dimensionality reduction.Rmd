@@ -1,0 +1,203 @@
+---
+title: "Ip week 14"
+author: "Kahiga Ndegwa"
+date: "26/07/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## 1. Define the Question
+
+This is will help us understand the task at hand, the dataset to be used and the metrics of Success.
+
+### a. Specifying the question.
+You are a Data analyst at Carrefour Kenya and are currently undertaking a project that will inform the marketing department on the most relevant marketing strategies that will result in the highest no. of sales (total price including tax). Your project has been divided into four parts where you'll explore a recent marketing dataset by performing various unsupervised learning techniques and later providing recommendations based on your insights.
+ 
+### b. Define the Metrics of Success.
+Our metrics of Success is to be able to do a conclusive Dimensionality reduction through the various methods.
+
+### c. Understand context
+The context is using data to do Dimensionality reduction through PCA and other ways to get meaningful insights and conclusions from advertising data.
+
+### d. Record the experiment design 
+This involves:
+a. Cleaning
+   i). Removing anomalies in the data
+  ii). Finding and dealing with missing data
+ iii). Dealing with duplicated rows in the data
+ 
+b. Exploratory Data Analysis
+   i). Univariate analysis
+  ii). Bivariate analysis
+ iii). Multivariate analysis 
+ 
+c. Dimensionality Reduction
+   i). PCA  
+  
+### e. Data relevance
+To establish if the data is relevant to the question and the objectives of the experiment.
+
+## 2. Read Data
+We start by importing the Data
+```{r}
+supermarket <- read.csv("C:/Users/user/Desktop/Supermarket_Dataset_1 - Sales Data.csv")
+```
+```{r}
+head(supermarket)
+```
+
+```{r}
+tail(supermarket)
+```
+
+#summary
+```{r}
+summary(supermarket)
+```
+```{r}
+#Tyding The Dataset
+#1.looking for duplicates
+
+sum(duplicated(supermarket))
+```
+```{r}
+#2. looking for missing
+sum(is.na(supermarket))
+```
+```{r}
+#3. looking for outliers
+#outliers
+boxplot(supermarket)
+```
+```{r}
+library(Hmisc)
+impute(supermarket, mean)  # replace with mean
+
+```
+
+```{r}
+boxplot(supermarket)
+```
+```{r}
+boxplot(supermarket, plot=FALSE)$out
+```
+##EDA
+#Univariate Analysis
+```{r}
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(pander)
+library(forcats)
+```
+```{r}
+supermarket %>%
+    ggplot(aes(Quantity)) +
+    geom_histogram(binwidth = 1.25, color = "black",fill = "grey") +
+    geom_vline(xintercept = mean(supermarket$Quantity), lwd = 2) +
+    labs(title = "Distribution of Quantity",
+         x = "Payment",
+         y = "Frequency") +
+    theme_minimal() +
+    scale_x_continuous(breaks = seq(7.5,35,2.5))
+```
+2.5 and 7.5
+
+```{r}
+supermarket %>%
+    ggplot() +
+    geom_bar(aes(fct_infreq(Product.line)), color = "black",fill = "grey") +
+    coord_flip() +
+    labs(title = "Number of product.line",
+         x = "Product.line",
+         y = "Number of product lines") +
+    scale_y_continuous(breaks = seq(0,40,5)) +
+    theme_minimal() 
+```
+
+```{r}
+pie(table(supermarket$Gender), main="male vs female")
+
+```
+```{r}
+pie(table(supermarket$Customer.type), main="member vs normal")
+```
+```{r}
+supermarket %>%
+    ggplot() +
+    geom_bar(aes(fct_infreq(Payment)), color = "black",fill = "grey") +
+    coord_flip() +
+    labs(title = "method of payment",
+         x = "method",
+         y = "") +
+    scale_y_continuous(breaks = seq(0,40,5)) +
+    theme_minimal()
+```
+
+```{r}
+pie(table(supermarket$Branch), main="A vs B vs C")
+```
+most people interviewed pay through Ewallet and cash
+there is a 50/50 chance of shopping there a member or not
+fashion accessories are the most bought items
+there is a 50/50 chance of shopping member being a male/female
+###Bivariate Analysis/multivariate
+
+```{r}
+supermarket %>%
+    ggplot(aes(Unit.price, gross.income)) +
+    geom_point() +
+    theme_minimal() +
+    labs(title = "Relationship between Unit.price and gross.income")
+```
+```{r}
+library(ggcorrplot)
+supermarket %>%
+    select_if(is.numeric) %>%
+    cor %>% 
+    ggcorrplot()
+```
+```{r}
+library(ggplot2)
+ggplot(supermarket, aes(x = cogs, y = gross.income)) + geom_point()
+
+```
+```{r}
+sp<-ggplot(supermarket, aes(x=Unit.price, y=Tax, color=Gender)) + geom_point()
+sp
+```
+```{r}
+ggplot(supermarket, aes(x = Tax, y = Total)) + geom_point()
+```
+###Dimensionality Reduction.
+There are problems we face when dealing with high dimensional datasets , some times called the curse of Dimensionality.
+
+## PCA - Principal Component Analysis
+lets check for Numerical variables.
+
+```{r}
+supermarket.pca <- prcomp(supermarket[,c(6,7,12,14,15)], center = TRUE, scale. = TRUE)
+summary(supermarket.pca)
+```
+```{r}
+
+library(devtools)
+library(usethis)
+library(ggbiplot)
+```
+```{r}
+library(ggbiplot)
+plot = ggbiplot(supermarket.pca , obs.scale = 1 , var.scale = 1 ,ellipse = TRUE, circle = TRUE)
+plot1 = plot + scale_color_discrete(name = '') + theme(legend.direction = 'horizontal')
+plot1
+```
+```{r}
+fviz_eig(supermarket.pca)
+```
+###conclusion
+ PC1 explains 58% of the total variance, which means that nearly two-thirds 
+ of the information in the dataset (6s) can be encapsulated 
+by just that one Principal Component. PC2 and PC3 explains 20% of the variance.
