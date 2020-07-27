@@ -1,0 +1,111 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+## 2. Read Data
+We start by importing the Data
+
+```{r}
+library(arules)
+supermarket <- read.transactions("C:/Users/user/Desktop/Supermarket_Sales_Dataset II.csv", sep = ",")
+```
+```{r}
+head(supermarket)
+```
+
+```{r}
+tail(supermarket)
+```
+
+#summary
+```{r}
+summary(supermarket)
+```
+```{r}
+class(supermarket)
+```
+```{r}
+str(supermarket)
+```
+```{r}
+inspect(supermarket[1:5])
+```
+# Exploring the frequency of some articles.
+# View transactions ranging from 10 to 12 and performing 
+# some operation in percentage terms of the total transactions 
+
+
+```{r}
+itemFrequency(supermarket[, 8:12],type = "absolute")
+round(itemFrequency(supermarket[, 8:12],type = "relative")*100,2)
+```
+
+# plot the frequency of items
+```{r}
+itemFrequencyPlot(supermarket, topN = 10,col="darkgreen")
+itemFrequencyPlot(supermarket, support = 0.1,col="darkred")
+```
+# Building a model based on association rules using the apriori function
+
+# We use Min Support as 0.001 and confidence as 0.8
+
+```{r}
+rules <- apriori (supermarket, parameter = list(supp = 0.001, conf = 0.8))
+rules
+```
+# Building a apriori model with Min Support as 0.002 and confidence as 0.8
+```{r}
+rules2 <- apriori (supermarket, parameter = list(supp = 0.002, conf = 0.8)) 
+rules2
+```
+
+# Building apriori model with Min Support as 0.002 and confidence as 0.6
+```{r}
+rules3 <- apriori (supermarket, parameter = list(supp = 0.001, conf = 0.6)) 
+rules3
+```
+```{r}
+summary(rules)
+```
+# Observing rules built in our model i.e. first 5 model rules
+```{r}
+inspect(rules[1:2])
+```
+
+# Order these rules by a criteria such as the level of confidence
+# then looking at the first five rules.
+```{r}
+rules<-sort(rules, by="confidence", decreasing=TRUE)
+inspect(rules[1:2])
+```
+# 1. Determine items that customers who previously bought eggs might buy 
+```{r}
+milk<- subset(rules, subset = lhs %pin% "eggs")
+
+# Then order by confidence
+milk <-sort(milk, by="confidence", decreasing=TRUE)
+inspect(milk[1:5])
+```
+
+# 2. Determine items that customers who previously bought avocado might buy 
+```{r}
+avocado <- subset(rules, subset = lhs %pin% "turkey")
+```
+# Then order by confidence
+```{r}
+avocado <-sort(avocado, by="confidence", decreasing=TRUE)
+inspect(turkey[1:3])
+```
+
+# 3. Determine which items customers bought before purchasing chocolate
+```{r}
+chocolate <- subset(rules, subset = rhs %pin% "chocolate")
+
+# Then order by confidence
+chocolate <-sort(chocolate, by="confidence", decreasing=TRUE)
+inspect(chocolate[1:2])
+```
